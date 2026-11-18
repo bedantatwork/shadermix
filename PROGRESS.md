@@ -7,8 +7,8 @@
 
 ## 2026-11-18 — M1 runtime + first 3 effects
 
-**Status:** M1 build complete, pending Bedant's visual check (I can't render WebGL
-output myself — see "Needs visual confirmation" below).
+**Status:** M1 done. Bedant visually confirmed aurora, mesh-gradient, and
+grain-gradient render correctly and animate smoothly via the playground page.
 
 **Shipped:**
 - `packages/core/src/runtime/`: `gl.ts` (WebGL2→1 context, the exact attributes
