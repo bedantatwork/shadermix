@@ -7,9 +7,9 @@
 
 ## 2026-11-18 — M3 (partial): Astro components + site foundation
 
-**Status:** Built, verified (lint/typecheck/test/build/size all green), pending
-Bedant's visual check — a static page structure I built from a screenshot
-reference needs a human look, same as WebGL effects did for M1.
+**Status:** Done. Bedant visually confirmed the home placeholder, `/components`
+gallery, and `/components/[slug]` detail pages all look good against the
+reference.
 
 **Scope decision:** skipped the M2 "remaining 7 effects" work for now (design
 thought needed first) and jumped to M3 site foundation, since the gallery/
