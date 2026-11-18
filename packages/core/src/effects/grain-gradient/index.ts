@@ -43,4 +43,4 @@ export function createGrainGradient(
   });
 }
 
-registerEffect(slug, createGrainGradient);
+registerEffect(slug, createGrainGradient, schema);

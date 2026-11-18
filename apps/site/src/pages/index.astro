@@ -1,21 +1,36 @@
 ---
-import "../styles/tokens.css";
+import Layout from "../layouts/Layout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shadermix — Shaders and motion for Astro &amp; Webflow</title>
-    <meta
-      name="description"
-      content="An open-source library of animated shader backgrounds, visual effects and text animations for Astro and Webflow."
-    />
-  </head>
-  <body>
-    <main>
-      <h1>Shadermix</h1>
-      <p>Shaders and motion for Astro &amp; Webflow. Site under construction.</p>
-    </main>
-  </body>
-</html>
+<Layout
+  title="Shadermix — Shaders and motion for Astro & Webflow"
+  description="An open-source library of animated shader backgrounds, visual effects and text animations for Astro and Webflow."
+>
+  <main class="home-placeholder">
+    <h1>Shadermix</h1>
+    <p>Shaders and motion for Astro &amp; Webflow.</p>
+    <p class="home-placeholder__note">
+      Home page design is pending the Figma reference (plan §8.10) — <a href="/components"
+        >see the component gallery</a
+      > in the meantime.
+    </p>
+  </main>
+</Layout>
+
+<style>
+  .home-placeholder {
+    max-width: 640px;
+    margin: var(--sm-space-6) auto;
+    padding: 0 var(--sm-space-4);
+    text-align: center;
+  }
+
+  .home-placeholder h1 {
+    font-size: var(--sm-text-2xl);
+  }
+
+  .home-placeholder__note {
+    color: var(--sm-color-text-muted);
+    font-size: var(--sm-text-sm);
+  }
+</style>

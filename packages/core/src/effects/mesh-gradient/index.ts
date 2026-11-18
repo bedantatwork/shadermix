@@ -53,4 +53,4 @@ export function createMeshGradient(
   });
 }
 
-registerEffect(slug, createMeshGradient);
+registerEffect(slug, createMeshGradient, schema);

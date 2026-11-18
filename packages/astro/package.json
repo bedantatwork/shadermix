@@ -4,20 +4,14 @@
   "description": "Astro components for Shadermix effects.",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+    ".": "./src/index.ts"
   },
-  "files": ["dist", "src/components"],
+  "files": ["src"],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit",
-    "size": "size-limit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@shadermix/core": "workspace:*"
@@ -26,16 +20,7 @@
     "astro": "^5.0.0 || ^6.0.0"
   },
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^11.0.0",
-    "size-limit": "^11.0.0",
-    "tsup": "^8.0.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
-  },
-  "size-limit": [
-    {
-      "path": "dist/index.js",
-      "limit": "2 KB"
-    }
-  ]
+  }
 }

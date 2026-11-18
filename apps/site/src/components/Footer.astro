@@ -1,0 +1,48 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p>&copy; {year} Shadermix. MIT licensed.</p>
+    <nav aria-label="Footer">
+      <a href="https://github.com/bedantatwork/shadermix" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="/docs">Docs</a>
+      <a href="/changelog">Changelog</a>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--sm-color-border);
+    margin-top: var(--sm-space-6);
+  }
+
+  .site-footer__inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: var(--sm-space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sm-space-3);
+    color: var(--sm-color-text-muted);
+    font-size: var(--sm-text-sm);
+  }
+
+  .site-footer__inner nav {
+    display: flex;
+    gap: var(--sm-space-4);
+  }
+
+  .site-footer__inner a {
+    text-decoration: none;
+    color: var(--sm-color-text-muted);
+  }
+
+  .site-footer__inner a:hover {
+    color: var(--sm-color-text);
+  }
+</style>

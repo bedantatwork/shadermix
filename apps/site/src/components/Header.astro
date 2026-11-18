@@ -1,0 +1,119 @@
+---
+const navItems = [
+  { label: "Components", href: "/components" },
+  { label: "Docs", href: "/docs" },
+  { label: "Changelog", href: "/changelog" },
+  { label: "Blog", href: "/blog" },
+];
+---
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="/" class="site-header__brand">
+      <span class="site-header__logo" aria-hidden="true"></span>
+      <span class="site-header__wordmark">Shadermix</span>
+    </a>
+    <nav class="site-header__nav" aria-label="Primary">
+      {navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <div class="site-header__actions">
+      <a
+        class="site-header__github"
+        href="https://github.com/bedantatwork/shadermix"
+        target="_blank"
+        rel="noreferrer"
+      >
+        GitHub
+      </a>
+      <a class="site-header__cta" href="/docs">Get started</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--sm-topbar-height);
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--sm-color-border);
+    background: color-mix(in srgb, var(--sm-color-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .site-header__inner {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 var(--sm-space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--sm-space-5);
+  }
+
+  .site-header__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--sm-space-2);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--sm-color-text);
+    white-space: nowrap;
+  }
+
+  .site-header__logo {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--sm-color-accent), #818cf8);
+  }
+
+  .site-header__nav {
+    display: flex;
+    gap: var(--sm-space-4);
+    flex: 1;
+  }
+
+  .site-header__nav a {
+    text-decoration: none;
+    color: var(--sm-color-text-muted);
+    font-size: var(--sm-text-sm);
+  }
+
+  .site-header__nav a:hover {
+    color: var(--sm-color-text);
+  }
+
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sm-space-3);
+    white-space: nowrap;
+  }
+
+  .site-header__github {
+    text-decoration: none;
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-sm);
+    padding: var(--sm-space-1) var(--sm-space-3);
+  }
+
+  .site-header__github:hover {
+    color: var(--sm-color-text);
+    border-color: var(--sm-color-text-muted);
+  }
+
+  .site-header__cta {
+    text-decoration: none;
+    font-size: var(--sm-text-sm);
+    font-weight: 600;
+    color: var(--sm-color-accent-foreground);
+    background: var(--sm-color-accent);
+    border-radius: var(--sm-radius-sm);
+    padding: var(--sm-space-1) var(--sm-space-3);
+  }
+</style>

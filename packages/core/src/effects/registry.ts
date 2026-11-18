@@ -1,3 +1,5 @@
+import type { Schema } from "../runtime/schema.js";
+
 export interface EffectInstance {
   update(options: Record<string, unknown>): void;
   play(): void;
@@ -10,8 +12,14 @@ export type EffectFactory = (
   options?: Record<string, unknown>,
 ) => EffectInstance;
 
-export const effectRegistry = new Map<string, EffectFactory>();
+export interface EffectRegistration {
+  factory: EffectFactory;
+  schema: Schema;
+}
 
-export function registerEffect(slug: string, factory: EffectFactory): void {
-  effectRegistry.set(slug, factory);
+export const effectRegistry = new Map<string, EffectRegistration>();
+
+/** `schema` lets attribute-based auto-init (auto.ts) parse `sm-*` attributes with the right types. */
+export function registerEffect(slug: string, factory: EffectFactory, schema: Schema): void {
+  effectRegistry.set(slug, { factory, schema });
 }

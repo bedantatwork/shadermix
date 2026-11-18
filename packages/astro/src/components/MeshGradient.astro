@@ -1,0 +1,39 @@
+---
+import { schema } from "@shadermix/core/mesh-gradient";
+
+export interface Props {
+  colors?: string[];
+  speed?: number;
+  distortion?: number;
+  grain?: number;
+  class?: string;
+  style?: string;
+  id?: string;
+}
+
+const { colors, speed, distortion, grain, class: className, style, id } = Astro.props;
+
+const effectiveColors = colors ?? schema.colors.default;
+const fallbackBackground = `linear-gradient(135deg, ${effectiveColors.join(", ")})`;
+---
+
+<div
+  sm-effect="mesh-gradient"
+  sm-colors={colors?.join(", ")}
+  sm-speed={speed}
+  sm-distortion={distortion}
+  sm-grain={grain}
+  class={className}
+  id={id}
+  style={[`background:${fallbackBackground}`, style].filter(Boolean).join(";")}
+>
+</div>
+
+<script>
+  import "@shadermix/core/mesh-gradient";
+  import { destroy, init } from "@shadermix/core/auto";
+
+  init();
+  document.addEventListener("astro:page-load", () => init());
+  document.addEventListener("astro:before-swap", () => destroy());
+</script>

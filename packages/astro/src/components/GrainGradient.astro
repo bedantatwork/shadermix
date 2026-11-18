@@ -1,0 +1,40 @@
+---
+import { schema } from "@shadermix/core/grain-gradient";
+
+export interface Props {
+  colors?: string[];
+  speed?: number;
+  grainAmount?: number;
+  angle?: number;
+  class?: string;
+  style?: string;
+  id?: string;
+}
+
+const { colors, speed, grainAmount, angle, class: className, style, id } = Astro.props;
+
+const effectiveColors = colors ?? schema.colors.default;
+const effectiveAngle = angle ?? schema.angle.default;
+const fallbackBackground = `linear-gradient(${effectiveAngle}deg, ${effectiveColors.join(", ")})`;
+---
+
+<div
+  sm-effect="grain-gradient"
+  sm-colors={colors?.join(", ")}
+  sm-speed={speed}
+  sm-grain-amount={grainAmount}
+  sm-angle={angle}
+  class={className}
+  id={id}
+  style={[`background:${fallbackBackground}`, style].filter(Boolean).join(";")}
+>
+</div>
+
+<script>
+  import "@shadermix/core/grain-gradient";
+  import { destroy, init } from "@shadermix/core/auto";
+
+  init();
+  document.addEventListener("astro:page-load", () => init());
+  document.addEventListener("astro:before-swap", () => destroy());
+</script>

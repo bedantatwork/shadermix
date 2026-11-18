@@ -5,6 +5,99 @@
 
 ---
 
+## 2026-11-18 — M3 (partial): Astro components + site foundation
+
+**Status:** Built, verified (lint/typecheck/test/build/size all green), pending
+Bedant's visual check — a static page structure I built from a screenshot
+reference needs a human look, same as WebGL effects did for M1.
+
+**Scope decision:** skipped the M2 "remaining 7 effects" work for now (design
+thought needed first) and jumped to M3 site foundation, since the gallery/
+detail page templates don't actually need all 10 effects to exist — see
+Bedant's reasoning in conversation. `@shadermix/astro` components (normally
+M2) were pulled forward since M3 needs them.
+
+**Shipped:**
+- `design-refs/components-page.png` — Bedant's reactbits.dev screenshot,
+  structure reference only for `/components` layout (not branding/colours).
+- `@shadermix/astro`: real `Aurora.astro`, `MeshGradient.astro`,
+  `GrainGradient.astro` components (CSS-gradient-fallback div + `sm-*`
+  attributes + View Transitions via `astro:page-load`/`astro:before-swap`).
+  **Architecture change:** `.astro` files can't be bundled by tsup/esbuild (no
+  Astro-aware loader) — switched this package to ship raw source
+  (`"exports": {".": "./src/index.ts"}`, no build step) instead of a tsup
+  dist, which is the standard pattern for Astro component libraries. Verified
+  end-to-end by actually rendering `<Aurora />` in apps/site and inspecting
+  the build output, not just trusting a clean build.
+- Sanity schemas (code only, no live project): `component`, `category`,
+  `page` (+ 5 section object types), `post`, `author`, `tag`,
+  `changelogEntry`, `docPage`, `siteSettings`, plus `seo`/`previewPreset`/
+  `shadermixEmbed` objects. `component.slug` and `shadermixEmbed.effect`
+  validate against the real `@shadermix/core` effect registry at Studio
+  schema-load time (not hardcoded). Skipped `template` (plan explicitly notes
+  it's post-launch/unused in v0.1). Studio builds clean with the real schema.
+- Mock content layer (`apps/site/src/lib/components-content.ts`) shaped
+  exactly like a future Sanity GROQ result, covering the 3 existing effects —
+  swap for real `@sanity/client` calls once the project exists, same shape.
+- Site shell: `Layout.astro`, `Header.astro` (nav, GitHub link, CTA),
+  `Footer.astro`, refined `tokens.css` with a provisional accent (`#22d3ee`,
+  cyan) chosen to be visually distinct from React Bits' purple per plan
+  §8.10 — flagged as swappable, no real brand decision made yet.
+- `/components` gallery page matching the reference screenshot's structure:
+  sticky top bar, left sidebar (category tabs + nav grouped by category),
+  3-col card grid, right rail (GitHub promo + empty showcase placeholder).
+  Implements the real plan §8.6 perf rule: gallery card previews are
+  deliberately **not** wired through the `sm-effect` auto-init system (that
+  would make every card WebGL-live on page load) — a page-local script
+  creates/destroys effects directly via `createAurora()` etc., gated on
+  IntersectionObserver + hover/focus (desktop) or just in-view capped at 4
+  concurrent (mobile).
+- `/components/[slug]` detail page: live always-on preview via the real Astro
+  component, props table generated from the effect's schema (not hand-typed),
+  4 snippet tabs (Astro/Webflow/Vanilla/Source) via a CSS-only radio-button
+  tab pattern (no JS needed), Shiki syntax highlighting via Astro's built-in
+  `astro:components` `<Code>` (glsl lang works out of the box). The Source
+  tab reads the *actual* shader + factory files from `packages/core` at build
+  time via Node `fs` — real source, not a placeholder.
+
+**Bugs found and fixed while building this (worth remembering):**
+1. `auto.ts`'s `init()` called `factory(el)` with no options at all — every
+   `sm-*` attribute (`sm-colors`, `sm-speed`, etc.) was being silently
+   ignored at runtime; every attribute-driven effect just used schema
+   defaults regardless of what was set on the element. Root cause: the
+   registry only stored the factory function, not its schema, so there was
+   no way to parse attributes with the right types. Fixed by having
+   `registerEffect(slug, factory, schema)` store both, and `auto.ts` calls
+   `parseAttributes(el, registration.schema)` before invoking the factory.
+2. `destroy()` was a no-op stub — View Transitions cleanup
+   (`astro:before-swap`) wouldn't have actually torn down WebGL contexts,
+   leaking them across client-side navigations. Fixed by tracking created
+   instances in a `WeakMap<Element, EffectInstance>` in `auto.ts` and calling
+   `.destroy()` on them for real.
+   Found both of these by tracing through how the Astro components would
+   *actually* use the attribute pipeline before writing them, not after.
+
+**Known gaps / explicitly deferred (not bugs, just scope cuts for today):**
+- Playground controls aren't live/interactive yet — snippet tabs show static
+  default values. Interactive controls (plan §8.5) need a small client
+  island; deferred.
+- Header's search input, category/sort dropdowns, and sidebar filter input
+  are visual only (not wired to any filtering logic yet).
+- `siteSettings` isn't enforced as a Studio singleton (no custom desk
+  structure yet).
+- Home page content is a placeholder — still blocked on the Figma reference
+  (plan §8.10) that was never connected (Figma MCP wasn't set up).
+- No blog pages, no `/docs` content pages yet (routes referenced in nav will
+  404 until built).
+
+**Next steps:** Bedant to visually check `/`, `/components`, and
+`/components/aurora|mesh-gradient|grain-gradient` at localhost:4321. After
+that: either the remaining M2 effects (now that there's a real session to
+think through their design) or continuing M3 (docs pages, blog, Sanity
+project creation + swapping the mock content layer for real data).
+
+---
+
 ## 2026-11-18 — M1 runtime + first 3 effects
 
 **Status:** M1 done. Bedant visually confirmed aurora, mesh-gradient, and

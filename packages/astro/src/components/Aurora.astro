@@ -1,0 +1,39 @@
+---
+import { schema } from "@shadermix/core/aurora";
+
+export interface Props {
+  colors?: string[];
+  speed?: number;
+  amplitude?: number;
+  blend?: number;
+  class?: string;
+  style?: string;
+  id?: string;
+}
+
+const { colors, speed, amplitude, blend, class: className, style, id } = Astro.props;
+
+const effectiveColors = colors ?? schema.colors.default;
+const fallbackBackground = `linear-gradient(135deg, ${effectiveColors.join(", ")})`;
+---
+
+<div
+  sm-effect="aurora"
+  sm-colors={colors?.join(", ")}
+  sm-speed={speed}
+  sm-amplitude={amplitude}
+  sm-blend={blend}
+  class={className}
+  id={id}
+  style={[`background:${fallbackBackground}`, style].filter(Boolean).join(";")}
+>
+</div>
+
+<script>
+  import "@shadermix/core/aurora";
+  import { destroy, init } from "@shadermix/core/auto";
+
+  init();
+  document.addEventListener("astro:page-load", () => init());
+  document.addEventListener("astro:before-swap", () => destroy());
+</script>

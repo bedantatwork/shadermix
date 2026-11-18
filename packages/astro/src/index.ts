@@ -1,4 +1,5 @@
-export const VERSION = "0.0.0";
+export { default as Aurora } from "./components/Aurora.astro";
+export { default as GrainGradient } from "./components/GrainGradient.astro";
+export { default as MeshGradient } from "./components/MeshGradient.astro";
 
-// Component exports (e.g. `export { default as Aurora } from "./components/Aurora.astro"`)
-// land once the corresponding effects exist in @shadermix/core (plan milestone M2).
+export const VERSION = "0.0.0";

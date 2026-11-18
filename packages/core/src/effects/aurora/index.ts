@@ -43,4 +43,4 @@ export function createAurora(
   });
 }
 
-registerEffect(slug, createAurora);
+registerEffect(slug, createAurora, schema);

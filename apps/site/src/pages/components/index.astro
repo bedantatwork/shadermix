@@ -1,0 +1,463 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCategories, getComponents } from "../../lib/components-content";
+
+const components = getComponents();
+const categories = getCategories();
+---
+
+<Layout
+  title="Components — Shadermix"
+  description="Browse Shadermix's shader backgrounds, visual effects and text animations."
+>
+  <div class="gallery">
+    <aside class="gallery__sidebar">
+      <span class="chip">Viewing all components</span>
+
+      <div class="category-tabs">
+        <button class="category-tabs__item category-tabs__item--active" type="button">All</button>
+        {
+          categories.map((category) => (
+            <button class="category-tabs__item" type="button">
+              {category.title}
+            </button>
+          ))
+        }
+      </div>
+
+      <input
+        class="filter-input"
+        type="search"
+        placeholder={`Filter ${components.length} components…`}
+        disabled
+      />
+
+      <nav class="sidebar-nav" aria-label="Components navigation">
+        <div class="sidebar-nav__group">
+          <p class="sidebar-nav__heading">Get started</p>
+          <a href="/docs">Introduction</a>
+          <a href="/docs/installation/astro">Installation</a>
+          <a href="/changelog">Changelog</a>
+        </div>
+        {
+          categories.map((category) => (
+            <div class="sidebar-nav__group">
+              <p class="sidebar-nav__heading">{category.title}</p>
+              {components
+                .filter((c) => c.categorySlug === category.slug)
+                .map((c) => (
+                  <a href={`/components/${c.slug}`}>
+                    {c.title}
+                    {c.status === "new" && <span class="pill">New</span>}
+                  </a>
+                ))}
+            </div>
+          ))
+        }
+      </nav>
+    </aside>
+
+    <main class="gallery__main">
+      <div class="gallery__main-head">
+        <h1>Components</h1>
+        <div class="gallery__controls">
+          <input class="search-input" type="search" placeholder="Search…" disabled />
+          <select class="select" disabled>
+            <option>All components</option>
+          </select>
+          <select class="select" disabled>
+            <option>Newest</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        {
+          components.map((component) => (
+            <a class="card" href={`/components/${component.slug}`}>
+              <div class="card__preview" data-preview-slug={component.slug}>
+                {component.status === "new" && <span class="card__badge">NEW</span>}
+              </div>
+              <p class="card__title">{component.title}</p>
+              <p class="card__category">{component.categoryTitle}</p>
+            </a>
+          ))
+        }
+      </div>
+    </main>
+
+    <aside class="gallery__rail">
+      <div class="promo-card">
+        <h2>Star Shadermix on GitHub</h2>
+        <p>Open source, MIT licensed. Help us reach more Astro & Webflow developers.</p>
+        <a
+          class="promo-card__cta"
+          href="https://github.com/bedantatwork/shadermix"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Star on GitHub
+        </a>
+      </div>
+      <div class="sponsor-card">
+        <p class="sponsor-card__heading">Built with Shadermix</p>
+        <p class="sponsor-card__empty">Showcase coming soon.</p>
+      </div>
+    </aside>
+  </div>
+</Layout>
+
+<script>
+  import { createAurora } from "@shadermix/core/aurora";
+  import { createGrainGradient } from "@shadermix/core/grain-gradient";
+  import { createMeshGradient } from "@shadermix/core/mesh-gradient";
+
+  // Gallery cards are deliberately NOT wired through the sm-effect attribute
+  // auto-init system — they need hover/in-view-gated lifecycle (plan §8.6),
+  // not "always on", so each preview is created and destroyed manually here.
+  const factories: Record<string, typeof createAurora> = {
+    aurora: createAurora,
+    "mesh-gradient": createMeshGradient,
+    "grain-gradient": createGrainGradient,
+  };
+
+  const instances = new WeakMap<Element, ReturnType<typeof createAurora>>();
+  const cards = document.querySelectorAll<HTMLElement>("[data-preview-slug]");
+  const inView = new Set<HTMLElement>();
+  const hovered = new Set<HTMLElement>();
+  const MOBILE_MAX_CONCURRENT = 4;
+  const isMobile = () => window.matchMedia("(hover: none)").matches;
+
+  function startCard(card: HTMLElement): void {
+    if (instances.has(card)) return;
+    const slug = card.dataset.previewSlug;
+    const factory = slug ? factories[slug] : undefined;
+    if (!factory) return;
+    instances.set(card, factory(card));
+  }
+
+  function stopCard(card: HTMLElement): void {
+    instances.get(card)?.destroy();
+    instances.delete(card);
+  }
+
+  function sync(card: HTMLElement): void {
+    if (isMobile()) {
+      const wantsPlay = inView.has(card);
+      const isPlaying = instances.has(card);
+      const playingCount = cards.length - [...cards].filter((c) => !instances.has(c)).length;
+      if (wantsPlay && !isPlaying && playingCount < MOBILE_MAX_CONCURRENT) startCard(card);
+      else if (!wantsPlay && isPlaying) stopCard(card);
+      return;
+    }
+    const shouldPlay = inView.has(card) && hovered.has(card);
+    if (shouldPlay) startCard(card);
+    else stopCard(card);
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const card = entry.target as HTMLElement;
+        if (entry.isIntersecting) inView.add(card);
+        else inView.delete(card);
+        sync(card);
+      }
+    },
+    { threshold: 0.2 },
+  );
+
+  cards.forEach((card) => {
+    observer.observe(card);
+    card.addEventListener("mouseenter", () => {
+      hovered.add(card);
+      sync(card);
+    });
+    card.addEventListener("mouseleave", () => {
+      hovered.delete(card);
+      sync(card);
+    });
+    card.addEventListener(
+      "focus",
+      () => {
+        hovered.add(card);
+        sync(card);
+      },
+      true,
+    );
+    card.addEventListener(
+      "blur",
+      () => {
+        hovered.delete(card);
+        sync(card);
+      },
+      true,
+    );
+  });
+</script>
+
+<style>
+  .gallery {
+    display: grid;
+    grid-template-columns: var(--sm-sidebar-width) 1fr var(--sm-rail-width);
+    gap: var(--sm-space-4);
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: var(--sm-space-4);
+  }
+
+  @media (max-width: 1200px) {
+    .gallery {
+      grid-template-columns: var(--sm-sidebar-width) 1fr;
+    }
+    .gallery__rail {
+      display: none;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .gallery {
+      grid-template-columns: 1fr;
+    }
+    .gallery__sidebar {
+      display: none;
+    }
+  }
+
+  .gallery__sidebar {
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-lg);
+    padding: var(--sm-space-3);
+    align-self: start;
+    position: sticky;
+    top: calc(var(--sm-topbar-height) + var(--sm-space-4));
+    display: flex;
+    flex-direction: column;
+    gap: var(--sm-space-3);
+  }
+
+  .chip {
+    display: inline-block;
+    width: fit-content;
+    font-size: var(--sm-text-xs);
+    color: var(--sm-color-text-muted);
+    border: 1px solid var(--sm-color-border);
+    border-radius: 999px;
+    padding: var(--sm-space-1) var(--sm-space-2);
+  }
+
+  .category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sm-space-1);
+  }
+
+  .category-tabs__item {
+    font-size: var(--sm-text-xs);
+    color: var(--sm-color-text-muted);
+    background: transparent;
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-sm);
+    padding: var(--sm-space-1) var(--sm-space-2);
+    cursor: pointer;
+  }
+
+  .category-tabs__item--active {
+    color: var(--sm-color-accent-foreground);
+    background: var(--sm-color-accent);
+    border-color: var(--sm-color-accent);
+  }
+
+  .filter-input,
+  .search-input,
+  .select {
+    font: inherit;
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text);
+    background: var(--sm-color-card);
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-sm);
+    padding: var(--sm-space-2) var(--sm-space-3);
+  }
+
+  .filter-input {
+    width: 100%;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sm-space-4);
+  }
+
+  .sidebar-nav__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sm-space-1);
+  }
+
+  .sidebar-nav__heading {
+    font-size: var(--sm-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sm-color-text-muted);
+    margin: 0 0 var(--sm-space-1);
+  }
+
+  .sidebar-nav a {
+    font-size: var(--sm-text-sm);
+    text-decoration: none;
+    color: var(--sm-color-text-muted);
+    padding: var(--sm-space-1) var(--sm-space-2);
+    border-radius: var(--sm-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--sm-space-2);
+  }
+
+  .sidebar-nav a:hover {
+    color: var(--sm-color-text);
+    background: var(--sm-color-card);
+  }
+
+  .pill {
+    font-size: 0.65rem;
+    color: var(--sm-color-accent-foreground);
+    background: var(--sm-color-accent);
+    border-radius: 999px;
+    padding: 0 var(--sm-space-1);
+  }
+
+  .gallery__main-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sm-space-3);
+    margin-bottom: var(--sm-space-4);
+  }
+
+  .gallery__main-head h1 {
+    font-size: var(--sm-text-xl);
+    margin: 0;
+  }
+
+  .gallery__controls {
+    display: flex;
+    gap: var(--sm-space-2);
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sm-space-4);
+  }
+
+  @media (max-width: 1200px) {
+    .card-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-lg);
+    padding: var(--sm-space-2);
+  }
+
+  .card:hover {
+    border-color: var(--sm-color-text-muted);
+  }
+
+  .card__preview {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--sm-radius-md);
+    overflow: hidden;
+    background: var(--sm-color-card);
+    margin-bottom: var(--sm-space-2);
+  }
+
+  .card__badge {
+    position: absolute;
+    top: var(--sm-space-2);
+    left: var(--sm-space-2);
+    z-index: 1;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--sm-color-accent-foreground);
+    background: var(--sm-color-accent);
+    border-radius: var(--sm-radius-sm);
+    padding: 2px var(--sm-space-1);
+  }
+
+  .card__title {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .card__category {
+    margin: 0;
+    font-size: var(--sm-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sm-color-text-muted);
+  }
+
+  .gallery__rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sm-space-3);
+    align-self: start;
+  }
+
+  .promo-card,
+  .sponsor-card {
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-lg);
+    padding: var(--sm-space-4);
+  }
+
+  .promo-card h2 {
+    font-size: var(--sm-text-lg);
+    margin: 0 0 var(--sm-space-2);
+  }
+
+  .promo-card p {
+    color: var(--sm-color-text-muted);
+    font-size: var(--sm-text-sm);
+  }
+
+  .promo-card__cta {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--sm-color-accent-foreground);
+    background: var(--sm-color-accent);
+    border-radius: var(--sm-radius-sm);
+    padding: var(--sm-space-2);
+    margin-top: var(--sm-space-3);
+  }
+
+  .sponsor-card__heading {
+    font-weight: 500;
+    margin: 0 0 var(--sm-space-1);
+  }
+
+  .sponsor-card__empty {
+    color: var(--sm-color-text-muted);
+    font-size: var(--sm-text-sm);
+    margin: 0;
+  }
+</style>
