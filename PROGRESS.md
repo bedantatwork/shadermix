@@ -8,8 +8,14 @@
 ## 2026-11-18 — M3 (rest): docs, changelog, blog, slug-link gate
 
 **Status:** Built and verified (lint/typecheck/test/build/size green, all 16
-routes serving). Pending Bedant's visual + interaction check — the gallery
-filtering is new client-side behaviour I can't exercise in a real browser.
+routes serving). Bedant signed off on the session and paused here.
+
+**Still worth a look when work resumes:** the gallery search/category/sort
+interaction at `/components` was never exercised in a real browser — it's
+client-side behaviour I can't run myself, and Bedant stepped away before
+clicking through it. Treat it as built-but-unconfirmed, not verified. The
+drafted docs and blog copy also still need Bedant's edit for voice before
+anything launches.
 
 **Sanity is still not connected, and didn't need to be.** Everything here is
 routes + rendering against the mock content layer. When the Sanity project
