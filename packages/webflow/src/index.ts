@@ -1,0 +1,1 @@
+import "@shadermix/core/auto";

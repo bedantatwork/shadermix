@@ -1,0 +1,41 @@
+/* Dark-first design tokens — plan §8.10. Swap values once the design reference lands. */
+:root {
+  color-scheme: dark;
+
+  --sm-color-bg: #0a0a0b;
+  --sm-color-bg-raised: #141416;
+  --sm-color-border: #27272a;
+  --sm-color-text: #f5f5f5;
+  --sm-color-text-muted: #a1a1aa;
+  --sm-color-accent: #5227ff;
+
+  --sm-font-sans:
+    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --sm-text-sm: 0.875rem;
+  --sm-text-base: 1rem;
+  --sm-text-lg: 1.25rem;
+  --sm-text-xl: 2rem;
+  --sm-text-2xl: 3rem;
+
+  --sm-space-1: 0.25rem;
+  --sm-space-2: 0.5rem;
+  --sm-space-3: 1rem;
+  --sm-space-4: 1.5rem;
+  --sm-space-5: 2.5rem;
+
+  --sm-radius-sm: 8px;
+  --sm-radius-md: 12px;
+  --sm-radius-lg: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--sm-color-bg);
+  color: var(--sm-color-text);
+  font-family: var(--sm-font-sans);
+}

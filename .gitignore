@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.turbo/
+
+# Astro
+.astro/
+
+# Sanity
+.sanity/
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+pnpm-debug.log*
+
+# OS
+.DS_Store
+
+# editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# changesets temp
+.changeset/pre.json.lock

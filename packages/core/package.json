@@ -1,0 +1,40 @@
+{
+  "name": "@shadermix/core",
+  "version": "0.0.0",
+  "description": "Zero-dependency WebGL runtime and effects for Shadermix.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": ["./dist/auto.js"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "import": "./dist/auto.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "size": "size-limit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.0.0",
+    "size-limit": "^11.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "4 KB"
+    }
+  ]
+}
