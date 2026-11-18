@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-11-18 — Sanity project created (setup in progress)
+
+**Status:** Sanity project exists; MCP connected but not yet authenticated.
+Site still runs entirely on the mock content layer — nothing swapped yet.
+
+**Facts worth keeping:**
+- Sanity **project ID: `qphpshsf`**, dataset `production`, org "Shadermix",
+  currently on a 30-day trial. Project ID is not a secret (it ships in
+  client-side code), so it's fine in this file.
+- `apps/studio/.env` written with the real project ID + dataset. Gitignored —
+  confirmed via `git check-ignore`. A fresh clone needs this file recreated
+  from `.env.example`.
+- Sanity MCP added at user scope in `~/.claude.json`:
+  `{"Sanity": {"type": "http", "url": "https://mcp.sanity.io"}}`.
+
+**Correction to an earlier assumption:** the local npm package
+`@sanity/mcp-server` is **deprecated** — `npm view` reports "DEPRECATED: Use
+the remote MCP server at https://mcp.sanity.io instead." The current setup is
+a hosted HTTP server using **OAuth**, so no API token is needed and no secret
+has to be handled. Don't go looking for a token-based local-server setup.
+
+**Also worth knowing:** Sanity's own onboarding panel tells you to run
+`npm create sanity@latest` and `create-next-app`. **Do not run those here** —
+they scaffold a fresh Next.js app plus a second Studio in a new folder, which
+would collide with the existing `apps/studio` (schemas already written) inside
+this Astro monorepo. That panel assumes a greenfield start.
+
+**Next steps, in order:**
+1. Restart Claude Code so the Sanity MCP tools load (Sanity's docs: the server
+   is available "the next time you run Claude Code"), then `/mcp` → Sanity →
+   Authenticate (OAuth, opens a browser).
+2. Deploy the schema manifest so the dataset knows the document types.
+3. Seed the drafted content from `apps/site/src/lib/*-content.ts` into the
+   dataset, so the Studio starts populated rather than empty.
+4. Add `@sanity/client` to `apps/site`, write GROQ queries, swap the four
+   `lib/*-content.ts` modules from mock data to real fetches. Return shapes
+   stay identical — no page code should need to change.
+5. `npx sanity login` + deploy the Studio to `shadermix.sanity.studio`.
+
+---
+
 ## 2026-11-18 — M3 (rest): docs, changelog, blog, slug-link gate
 
 **Status:** Built and verified (lint/typecheck/test/build/size green, all 16
