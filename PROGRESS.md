@@ -5,6 +5,91 @@
 
 ---
 
+## 2026-11-18 — M3 (rest): docs, changelog, blog, slug-link gate
+
+**Status:** Built and verified (lint/typecheck/test/build/size green, all 16
+routes serving). Pending Bedant's visual + interaction check — the gallery
+filtering is new client-side behaviour I can't exercise in a real browser.
+
+**Sanity is still not connected, and didn't need to be.** Everything here is
+routes + rendering against the mock content layer. When the Sanity project
+exists, the swap is: replace the bodies of `lib/*-content.ts` with
+`@sanity/client` GROQ calls. Return shapes and all page code stay as-is.
+
+**Shipped:**
+- **Portable Text renderer** (`lib/portable-text.ts` + `PortableText.astro`).
+  This is the piece that makes the Sanity swap cheap: all mock content is
+  authored in genuine Portable Text shape (blocks, spans, marks, markDefs),
+  so real GROQ output drops straight in. Supports h2–h4 (with slugified
+  anchor ids), paragraphs, blockquotes, bullet/number lists, `strong`/`em`/
+  `code` marks, links (external ones get `target=_blank rel=noreferrer`),
+  plus the two custom block types from plan §8.3: `code` (Shiki-highlighted
+  via Astro's built-in `<Code>`, with optional filename label) and
+  `shadermixEmbed` (a live effect inside article body copy).
+  - Portable Text encodes list items as a *flat run of sibling blocks* with
+    no wrapping list node, so `groupNodes()` groups consecutive runs into
+    real `<ul>`/`<ol>`. Easy thing to get wrong if we ever rewrite this.
+  - Span marks are composed into HTML strings and injected with `set:html`,
+    so text and href values are explicitly escaped in `renderSpans()`. Marks
+    themselves are matched against a known set — no caller string reaches
+    output unescaped. Worth preserving if that function is ever edited.
+- **`ShadermixEmbed.astro`** — renders live effects in body content using the
+  same `sm-*` attribute contract as Webflow, so our own site exercises the
+  auto-init path rather than a separate code path.
+- **Docs**: `DocsLayout.astro` (sticky grouped sidebar) + `/docs`
+  (Introduction, with a live aurora embed), `/docs/installation/astro`,
+  `/docs/installation/webflow`, `/docs/installation/vanilla`,
+  `/docs/performance`. Real drafted content, not lorem — covers install,
+  content layering, View Transitions, the `sm-*` attribute convention,
+  Webflow CMS re-init, the full JS lifecycle API, and the performance rules.
+  Introduction is served at `/docs` only (not also `/docs/introduction`) to
+  avoid duplicate content at two URLs.
+- **`/changelog`** — entries newest-first from the content layer.
+- **Blog**: `/blog` (list + tag nav), `/blog/[slug]` (article with author
+  card, tag pills, related-components cards, live embeds), `/blog/tag/[slug]`
+  (only generated for tags that actually have posts), and `/rss.xml` via
+  `@astrojs/rss`. One real drafted launch post, "Introducing Shadermix".
+- **Slug-link build gate (plan §8.2)** — `lib/validate-content.ts`. A
+  component doc whose slug has no matching effect in the registry **fails the
+  build** with a message naming the bad slug and listing valid ones; an
+  effect with no doc only warns. Kept pure/parameterised so it's unit
+  testable. Verified by temporarily inserting a bogus slug and confirming the
+  build actually fails — not just by trusting the happy path.
+- **Gallery search/filter/sort now actually works** (plan §8.1/§8.4) — these
+  controls were decorative placeholders from the last session. Both search
+  boxes (main + sidebar) stay in sync, category tabs and the category select
+  stay in sync, sort by newest/name, live result-count chip, empty state.
+  Filtering sets `hidden` on cards, which makes IntersectionObserver report
+  them as not-intersecting, so hidden cards' WebGL previews stop on their own
+  — no extra teardown wiring needed. Re-sorting uses `appendChild` to *move*
+  existing nodes rather than re-rendering, so preview instances and observer
+  registrations survive a sort.
+
+**Dependency added:** `@astrojs/rss` in `apps/site`. Plan §12 says to ask
+before adding dependencies, but plan §8.4 names this exact package for the
+feed, so I treated it as pre-approved rather than blocking. Also added
+`vitest` to `apps/site` devDependencies — not a new tooling choice, it's
+already the repo-wide test runner; `apps/site` just had no tests before.
+
+**Test count:** 20 (14 in core, 6 new in site for the slug-link gate).
+
+**Known gaps / still deferred:**
+- Playground controls still aren't interactive (plan §8.5) — component pages
+  show static default values in the snippet tabs. Needs a small client island.
+- Home page is still a placeholder — blocked on the Figma reference (§8.10).
+- `siteSettings` still isn't a Studio singleton.
+- No OG image generation, JSON-LD, sitemap, or `llms.txt` yet — those are M4
+  (plan §8.7), not missed work.
+- Blog/docs content is drafted by me and should be reviewed/rewritten by
+  Bedant before launch, especially the launch post's framing.
+
+**Next steps:** Bedant to check the new routes, especially gallery filtering
+interaction. Then: the remaining 7 effects (M2), or M4 (SEO/AEO + the real
+Sanity project + Cloudflare deploy). The npm org `@shadermix` is still
+uncreated and blocks any publish.
+
+---
+
 ## 2026-11-18 — M3 (partial): Astro components + site foundation
 
 **Status:** Done. Bedant visually confirmed the home placeholder, `/components`

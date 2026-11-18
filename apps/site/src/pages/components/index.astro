@@ -12,13 +12,19 @@ const categories = getCategories();
 >
   <div class="gallery">
     <aside class="gallery__sidebar">
-      <span class="chip">Viewing all components</span>
+      <span class="chip" data-state-chip>Viewing all components</span>
 
       <div class="category-tabs">
-        <button class="category-tabs__item category-tabs__item--active" type="button">All</button>
+        <button
+          class="category-tabs__item category-tabs__item--active"
+          type="button"
+          data-category=""
+        >
+          All
+        </button>
         {
           categories.map((category) => (
-            <button class="category-tabs__item" type="button">
+            <button class="category-tabs__item" type="button" data-category={category.slug}>
               {category.title}
             </button>
           ))
@@ -29,7 +35,7 @@ const categories = getCategories();
         class="filter-input"
         type="search"
         placeholder={`Filter ${components.length} components…`}
-        disabled
+        data-filter-input
       />
 
       <nav class="sidebar-nav" aria-label="Components navigation">
@@ -61,20 +67,31 @@ const categories = getCategories();
       <div class="gallery__main-head">
         <h1>Components</h1>
         <div class="gallery__controls">
-          <input class="search-input" type="search" placeholder="Search…" disabled />
-          <select class="select" disabled>
-            <option>All components</option>
+          <input class="search-input" type="search" placeholder="Search…" data-search-input />
+          <select class="select" data-category-select aria-label="Filter by category">
+            <option value="">All components</option>
+            {categories.map((category) => <option value={category.slug}>{category.title}</option>)}
           </select>
-          <select class="select" disabled>
-            <option>Newest</option>
+          <select class="select" data-sort-select aria-label="Sort">
+            <option value="newest">Newest</option>
+            <option value="name">Name</option>
           </select>
         </div>
       </div>
 
-      <div class="card-grid">
+      <div class="card-grid" data-card-grid>
         {
           components.map((component) => (
-            <a class="card" href={`/components/${component.slug}`}>
+            <a
+              class="card"
+              href={`/components/${component.slug}`}
+              data-card
+              data-category={component.categorySlug}
+              data-order={component.order}
+              data-search={[component.title, component.shortDescription, ...component.tags]
+                .join(" ")
+                .toLowerCase()}
+            >
               <div class="card__preview" data-preview-slug={component.slug}>
                 {component.status === "new" && <span class="card__badge">NEW</span>}
               </div>
@@ -84,6 +101,8 @@ const categories = getCategories();
           ))
         }
       </div>
+
+      <p class="empty-state" data-empty-state hidden>No components match that search.</p>
     </main>
 
     <aside class="gallery__rail">
@@ -194,6 +213,93 @@ const categories = getCategories();
       true,
     );
   });
+
+  // --- Filtering, search and sort (plan §8.1: client-side, no external service) ---
+
+  const grid = document.querySelector<HTMLElement>("[data-card-grid]");
+  const cardLinks = [...document.querySelectorAll<HTMLElement>("[data-card]")];
+  const emptyState = document.querySelector<HTMLElement>("[data-empty-state]");
+  const stateChip = document.querySelector<HTMLElement>("[data-state-chip]");
+  const searchInput = document.querySelector<HTMLInputElement>("[data-search-input]");
+  const filterInput = document.querySelector<HTMLInputElement>("[data-filter-input]");
+  const categorySelect = document.querySelector<HTMLSelectElement>("[data-category-select]");
+  const sortSelect = document.querySelector<HTMLSelectElement>("[data-sort-select]");
+  const categoryButtons = [...document.querySelectorAll<HTMLElement>("[data-category]")].filter(
+    (el) => el.tagName === "BUTTON",
+  );
+
+  let query = "";
+  let category = "";
+
+  function applyFilters(): void {
+    let visible = 0;
+
+    for (const card of cardLinks) {
+      const matchesQuery = !query || (card.dataset.search ?? "").includes(query);
+      const matchesCategory = !category || card.dataset.category === category;
+      const show = matchesQuery && matchesCategory;
+      card.hidden = !show;
+      if (show) visible++;
+    }
+
+    if (emptyState) emptyState.hidden = visible > 0;
+    if (grid) grid.hidden = visible === 0;
+
+    if (stateChip) {
+      const label = category
+        ? categoryButtons.find((b) => b.dataset.category === category)?.textContent?.trim()
+        : null;
+      stateChip.textContent = query
+        ? `${visible} result${visible === 1 ? "" : "s"}`
+        : label
+          ? `Viewing ${label}`
+          : "Viewing all components";
+    }
+  }
+
+  function applySort(): void {
+    if (!grid) return;
+    const mode = sortSelect?.value ?? "newest";
+    const sorted = [...cardLinks].sort((a, b) => {
+      if (mode === "name") {
+        const aName = a.querySelector(".card__title")?.textContent ?? "";
+        const bName = b.querySelector(".card__title")?.textContent ?? "";
+        return aName.localeCompare(bName);
+      }
+      return Number(a.dataset.order ?? 0) - Number(b.dataset.order ?? 0);
+    });
+    // Re-appending moves existing nodes; it does not recreate them, so each
+    // card's preview instance and observer registration survive a re-sort.
+    for (const card of sorted) grid.appendChild(card);
+  }
+
+  function setCategory(next: string): void {
+    category = next;
+    for (const button of categoryButtons) {
+      button.classList.toggle("category-tabs__item--active", button.dataset.category === next);
+    }
+    if (categorySelect && categorySelect.value !== next) categorySelect.value = next;
+    applyFilters();
+  }
+
+  function setQuery(next: string, source: HTMLInputElement | null): void {
+    query = next.trim().toLowerCase();
+    // Keep the two search boxes in sync without clobbering the one being typed in.
+    for (const input of [searchInput, filterInput]) {
+      if (input && input !== source && input.value !== next) input.value = next;
+    }
+    applyFilters();
+  }
+
+  searchInput?.addEventListener("input", () => setQuery(searchInput.value, searchInput));
+  filterInput?.addEventListener("input", () => setQuery(filterInput.value, filterInput));
+  categorySelect?.addEventListener("change", () => setCategory(categorySelect.value));
+  sortSelect?.addEventListener("change", () => applySort());
+  for (const button of categoryButtons) {
+    button.addEventListener("click", () => setCategory(button.dataset.category ?? ""));
+  }
+
+  applyFilters();
 </script>
 
 <style>
@@ -372,6 +478,16 @@ const categories = getCategories();
     border: 1px solid var(--sm-color-border);
     border-radius: var(--sm-radius-lg);
     padding: var(--sm-space-2);
+  }
+
+  .card[hidden] {
+    display: none;
+  }
+
+  .empty-state {
+    color: var(--sm-color-text-muted);
+    text-align: center;
+    padding: var(--sm-space-5) 0;
   }
 
   .card:hover {

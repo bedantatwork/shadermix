@@ -4,8 +4,10 @@
 // calls once the Sanity project exists; keep the same return shape so pages
 // using this module don't need to change.
 import * as aurora from "@shadermix/core/aurora";
+import { effectRegistry } from "@shadermix/core/effects";
 import * as grainGradient from "@shadermix/core/grain-gradient";
 import * as meshGradient from "@shadermix/core/mesh-gradient";
+import { assertSlugLinks } from "./validate-content";
 
 // Loose structural type for an effect's option schema — avoids depending on
 // @shadermix/core's internal Schema type, which isn't part of its public API.
@@ -77,6 +79,12 @@ const docs: ComponentDoc[] = [
     schema: grainGradient.schema,
   },
 ];
+
+// Runs at module load — i.e. at build time, as soon as any page imports this.
+assertSlugLinks(
+  docs.map((doc) => doc.slug),
+  [...effectRegistry.keys()],
+);
 
 export function getComponents(): ComponentDoc[] {
   return [...docs].sort((a, b) => a.order - b.order);

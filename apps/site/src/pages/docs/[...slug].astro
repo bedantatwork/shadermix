@@ -1,0 +1,38 @@
+---
+import PortableText from "../../components/PortableText.astro";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { getDocPageBySlug, getDocPages } from "../../lib/docs-content";
+
+export function getStaticPaths() {
+  // "introduction" is served by docs/index.astro at /docs.
+  return getDocPages()
+    .filter((doc) => doc.slug !== "introduction")
+    .map((doc) => ({ params: { slug: doc.slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+const doc = getDocPageBySlug(slug);
+if (!doc) throw new Error(`No doc page for slug "${slug}" — check lib/docs-content.ts`);
+---
+
+<DocsLayout
+  title={`${doc.title} — Shadermix docs`}
+  description={doc.description}
+  activeSlug={doc.slug}
+>
+  <h1>{doc.title}</h1>
+  <p class="lead">{doc.description}</p>
+  <PortableText value={doc.body} />
+</DocsLayout>
+
+<style>
+  h1 {
+    font-size: var(--sm-text-xl);
+    margin: 0 0 var(--sm-space-2);
+  }
+
+  .lead {
+    color: var(--sm-color-text-muted);
+    margin: 0 0 var(--sm-space-4);
+  }
+</style>

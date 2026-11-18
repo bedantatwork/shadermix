@@ -1,0 +1,57 @@
+---
+// Renders a live effect inside article/doc body content (plan §8.3's
+// `shadermixEmbed` custom Portable Text block). Uses the same `sm-*` attribute
+// contract as Webflow, so the auto-init path is exercised by our own site.
+export interface Props {
+  effect: string;
+  options?: Record<string, unknown>;
+  height?: number;
+  caption?: string;
+}
+
+const { effect, options = {}, height = 320, caption } = Astro.props;
+
+function toAttrName(key: string): string {
+  return `sm-${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
+}
+
+const effectAttrs = Object.fromEntries(
+  Object.entries(options).map(([key, value]) => [
+    toAttrName(key),
+    Array.isArray(value) ? value.join(", ") : String(value),
+  ]),
+);
+---
+
+<figure class="embed">
+  <div class="embed__stage" style={`height:${height}px`} sm-effect={effect} {...effectAttrs}></div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+  import "@shadermix/core/effects";
+  import { destroy, init } from "@shadermix/core/auto";
+
+  init();
+  document.addEventListener("astro:page-load", () => init());
+  document.addEventListener("astro:before-swap", () => destroy());
+</script>
+
+<style>
+  .embed {
+    margin: var(--sm-space-4) 0;
+  }
+
+  .embed__stage {
+    position: relative;
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-md);
+    overflow: hidden;
+  }
+
+  .embed figcaption {
+    margin-top: var(--sm-space-2);
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+  }
+</style>

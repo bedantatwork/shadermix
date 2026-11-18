@@ -1,0 +1,203 @@
+---
+import PortableText from "../../components/PortableText.astro";
+import Layout from "../../layouts/Layout.astro";
+import {
+  getAuthorBySlug,
+  getPostBySlug,
+  getPosts,
+  getTagBySlug,
+} from "../../lib/blog-content";
+import { getComponentBySlug } from "../../lib/components-content";
+
+export function getStaticPaths() {
+  return getPosts().map((post) => ({ params: { slug: post.slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+const post = getPostBySlug(slug);
+if (!post) throw new Error(`No post for slug "${slug}" — check lib/blog-content.ts`);
+
+const author = getAuthorBySlug(post.authorSlug);
+const relatedComponents = post.relatedComponentSlugs
+  .map((componentSlug) => getComponentBySlug(componentSlug))
+  .filter((component) => component !== undefined);
+
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Layout title={`${post.title} — Shadermix`} description={post.excerpt}>
+  <article class="post">
+    <nav class="post__breadcrumb"><a href="/blog">Blog</a> / <span>{post.title}</span></nav>
+
+    <h1>{post.title}</h1>
+    <div class="post__meta">
+      <time datetime={post.publishedAt}>{dateFormatter.format(new Date(post.publishedAt))}</time>
+      {author && <span>· {author.name}</span>}
+    </div>
+
+    <div class="post__tags">
+      {
+        post.tagSlugs.map((tagSlug) => {
+          const tag = getTagBySlug(tagSlug);
+          return tag ? (
+            <a class="tag-pill" href={`/blog/tag/${tag.slug}`}>
+              {tag.title}
+            </a>
+          ) : null;
+        })
+      }
+    </div>
+
+    <PortableText value={post.body} />
+
+    {
+      author && (
+        <aside class="author-card">
+          <p class="author-card__name">{author.name}</p>
+          <p class="author-card__bio">{author.bio}</p>
+          {author.githubUrl && (
+            <a href={author.githubUrl} target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          )}
+        </aside>
+      )
+    }
+
+    {
+      relatedComponents.length > 0 && (
+        <section class="related">
+          <h2>Components used</h2>
+          <div class="related__grid">
+            {relatedComponents.map((component) => (
+              <a class="related__card" href={`/components/${component.slug}`}>
+                <span class="related__title">{component.title}</span>
+                <span class="related__desc">{component.shortDescription}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </article>
+</Layout>
+
+<style>
+  .post {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: var(--sm-space-4);
+  }
+
+  .post__breadcrumb {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+    margin-bottom: var(--sm-space-3);
+  }
+
+  .post__breadcrumb a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .post h1 {
+    font-size: var(--sm-text-xl);
+    margin: 0 0 var(--sm-space-2);
+  }
+
+  .post__meta {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+    display: flex;
+    gap: var(--sm-space-2);
+  }
+
+  .post__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sm-space-2);
+    margin: var(--sm-space-3) 0 var(--sm-space-4);
+  }
+
+  .tag-pill {
+    font-size: var(--sm-text-xs);
+    color: var(--sm-color-text-muted);
+    text-decoration: none;
+    border: 1px solid var(--sm-color-border);
+    border-radius: 999px;
+    padding: 0 var(--sm-space-2);
+  }
+
+  .tag-pill:hover {
+    color: var(--sm-color-text);
+    border-color: var(--sm-color-text-muted);
+  }
+
+  .author-card {
+    margin-top: var(--sm-space-5);
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-lg);
+    padding: var(--sm-space-4);
+  }
+
+  .author-card__name {
+    font-weight: 600;
+    margin: 0 0 var(--sm-space-1);
+  }
+
+  .author-card__bio {
+    color: var(--sm-color-text-muted);
+    font-size: var(--sm-text-sm);
+    margin: 0 0 var(--sm-space-2);
+  }
+
+  .author-card a {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-accent);
+    text-decoration: none;
+  }
+
+  .related {
+    margin-top: var(--sm-space-5);
+  }
+
+  .related h2 {
+    font-size: var(--sm-text-lg);
+    margin-bottom: var(--sm-space-3);
+  }
+
+  .related__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sm-space-3);
+  }
+
+  .related__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sm-space-1);
+    text-decoration: none;
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-md);
+    padding: var(--sm-space-3);
+    flex: 1 1 240px;
+  }
+
+  .related__card:hover {
+    border-color: var(--sm-color-text-muted);
+  }
+
+  .related__title {
+    font-weight: 500;
+  }
+
+  .related__desc {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+  }
+</style>

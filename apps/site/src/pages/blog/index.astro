@@ -1,0 +1,154 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getPosts, getTagBySlug, getUsedTags } from "../../lib/blog-content";
+
+const posts = getPosts();
+const tags = getUsedTags();
+
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Layout title="Blog — Shadermix" description="Articles about shaders, Astro, and Webflow.">
+  <main class="blog">
+    <header class="blog__head">
+      <h1>Blog</h1>
+      <a class="blog__feed" href="/rss.xml">RSS</a>
+    </header>
+
+    {
+      tags.length > 0 && (
+        <nav class="blog__tags" aria-label="Tags">
+          {tags.map((tag) => (
+            <a href={`/blog/tag/${tag.slug}`}>{tag.title}</a>
+          ))}
+        </nav>
+      )
+    }
+
+    <ul class="post-list">
+      {
+        posts.map((post) => (
+          <li class="post-list__item">
+            <time datetime={post.publishedAt}>
+              {dateFormatter.format(new Date(post.publishedAt))}
+            </time>
+            <h2>
+              <a href={`/blog/${post.slug}`}>{post.title}</a>
+            </h2>
+            <p>{post.excerpt}</p>
+            <div class="post-list__tags">
+              {post.tagSlugs.map((slug) => {
+                const tag = getTagBySlug(slug);
+                return tag ? <span class="tag-pill">{tag.title}</span> : null;
+              })}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</Layout>
+
+<style>
+  .blog {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: var(--sm-space-4);
+  }
+
+  .blog__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sm-space-3);
+  }
+
+  .blog__head h1 {
+    font-size: var(--sm-text-xl);
+    margin: 0;
+  }
+
+  .blog__feed {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+    text-decoration: none;
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-sm);
+    padding: var(--sm-space-1) var(--sm-space-2);
+  }
+
+  .blog__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sm-space-2);
+    margin: var(--sm-space-4) 0;
+  }
+
+  .blog__tags a {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+    text-decoration: none;
+    border: 1px solid var(--sm-color-border);
+    border-radius: 999px;
+    padding: var(--sm-space-1) var(--sm-space-3);
+  }
+
+  .blog__tags a:hover {
+    color: var(--sm-color-text);
+    border-color: var(--sm-color-text-muted);
+  }
+
+  .post-list {
+    list-style: none;
+    margin: var(--sm-space-5) 0 0;
+    padding: 0;
+  }
+
+  .post-list__item {
+    padding-top: var(--sm-space-4);
+    border-top: 1px solid var(--sm-color-border);
+    margin-bottom: var(--sm-space-5);
+  }
+
+  .post-list__item time {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+  }
+
+  .post-list__item h2 {
+    font-size: var(--sm-text-lg);
+    margin: var(--sm-space-1) 0 var(--sm-space-2);
+  }
+
+  .post-list__item h2 a {
+    text-decoration: none;
+  }
+
+  .post-list__item h2 a:hover {
+    color: var(--sm-color-accent);
+  }
+
+  .post-list__item p {
+    color: var(--sm-color-text-muted);
+    margin: 0 0 var(--sm-space-3);
+  }
+
+  .post-list__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sm-space-2);
+  }
+
+  .tag-pill {
+    font-size: var(--sm-text-xs);
+    color: var(--sm-color-text-muted);
+    border: 1px solid var(--sm-color-border);
+    border-radius: 999px;
+    padding: 0 var(--sm-space-2);
+  }
+</style>

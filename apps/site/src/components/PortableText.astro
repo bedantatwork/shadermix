@@ -1,0 +1,134 @@
+---
+import { Code } from "astro:components";
+import {
+  blockToPlainText,
+  groupNodes,
+  renderSpans,
+  slugifyHeading,
+  type PortableTextNode,
+} from "../lib/portable-text";
+import ShadermixEmbed from "./ShadermixEmbed.astro";
+
+export interface Props {
+  value: PortableTextNode[];
+}
+
+const { value } = Astro.props;
+const nodes = groupNodes(value);
+---
+
+<div class="prose">
+  {
+    nodes.map((node) => {
+      if (node._type === "list") {
+        const Tag = node.listItem === "number" ? "ol" : "ul";
+        return (
+          <Tag>
+            {node.items.map((item) => (
+              <li set:html={renderSpans(item)} />
+            ))}
+          </Tag>
+        );
+      }
+
+      if (node._type === "code") {
+        return (
+          <div class="prose__code">
+            {node.filename && <p class="prose__filename">{node.filename}</p>}
+            <Code code={node.code} lang={node.language as never} theme="github-dark" />
+          </div>
+        );
+      }
+
+      if (node._type === "shadermixEmbed") {
+        return (
+          <ShadermixEmbed
+            effect={node.effect}
+            options={node.options}
+            height={node.height}
+            caption={node.caption}
+          />
+        );
+      }
+
+      const text = blockToPlainText(node);
+      const html = renderSpans(node);
+
+      if (node.style === "h2") return <h2 id={slugifyHeading(text)} set:html={html} />;
+      if (node.style === "h3") return <h3 id={slugifyHeading(text)} set:html={html} />;
+      if (node.style === "h4") return <h4 id={slugifyHeading(text)} set:html={html} />;
+      if (node.style === "blockquote") return <blockquote set:html={html} />;
+      return <p set:html={html} />;
+    })
+  }
+</div>
+
+<style>
+  .prose {
+    line-height: 1.7;
+  }
+
+  .prose :global(h2) {
+    font-size: var(--sm-text-lg);
+    margin-top: var(--sm-space-5);
+    margin-bottom: var(--sm-space-2);
+  }
+
+  .prose :global(h3),
+  .prose :global(h4) {
+    font-size: var(--sm-text-base);
+    margin-top: var(--sm-space-4);
+    margin-bottom: var(--sm-space-2);
+  }
+
+  .prose :global(p) {
+    color: var(--sm-color-text-muted);
+  }
+
+  .prose :global(li) {
+    color: var(--sm-color-text-muted);
+    margin-bottom: var(--sm-space-1);
+  }
+
+  .prose :global(a) {
+    color: var(--sm-color-accent);
+  }
+
+  .prose :global(code) {
+    font-size: 0.9em;
+    background: var(--sm-color-card);
+    border: 1px solid var(--sm-color-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .prose :global(blockquote) {
+    margin: var(--sm-space-4) 0;
+    padding-left: var(--sm-space-3);
+    border-left: 2px solid var(--sm-color-accent);
+    color: var(--sm-color-text-muted);
+  }
+
+  .prose__code {
+    margin: var(--sm-space-3) 0;
+  }
+
+  .prose__filename {
+    font-size: var(--sm-text-xs);
+    color: var(--sm-color-text-muted);
+    margin: 0 0 var(--sm-space-1);
+  }
+
+  .prose :global(pre) {
+    border: 1px solid var(--sm-color-border);
+    border-radius: var(--sm-radius-md);
+    padding: var(--sm-space-3);
+    overflow-x: auto;
+  }
+
+  .prose :global(pre code) {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+</style>

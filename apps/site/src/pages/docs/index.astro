@@ -1,0 +1,20 @@
+---
+import PortableText from "../../components/PortableText.astro";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { getDocPageBySlug } from "../../lib/docs-content";
+
+const doc = getDocPageBySlug("introduction");
+if (!doc) throw new Error('Missing doc page "introduction" — check lib/docs-content.ts');
+---
+
+<DocsLayout title={`${doc.title} — Shadermix docs`} description={doc.description} activeSlug={doc.slug}>
+  <h1>{doc.title}</h1>
+  <PortableText value={doc.body} />
+</DocsLayout>
+
+<style>
+  h1 {
+    font-size: var(--sm-text-xl);
+    margin: 0 0 var(--sm-space-4);
+  }
+</style>

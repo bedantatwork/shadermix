@@ -1,0 +1,109 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { getPostsByTag, getTagBySlug, getUsedTags } from "../../../lib/blog-content";
+
+export function getStaticPaths() {
+  return getUsedTags().map((tag) => ({ params: { slug: tag.slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+const tag = getTagBySlug(slug);
+if (!tag) throw new Error(`No tag for slug "${slug}" — check lib/blog-content.ts`);
+
+const posts = getPostsByTag(slug);
+
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Layout title={`${tag.title} — Shadermix blog`} description={tag.description}>
+  <main class="tag-page">
+    <nav class="tag-page__breadcrumb"><a href="/blog">Blog</a> / <span>{tag.title}</span></nav>
+    <h1>{tag.title}</h1>
+    <p class="lead">{tag.description}</p>
+
+    <ul class="post-list">
+      {
+        posts.map((post) => (
+          <li class="post-list__item">
+            <time datetime={post.publishedAt}>
+              {dateFormatter.format(new Date(post.publishedAt))}
+            </time>
+            <h2>
+              <a href={`/blog/${post.slug}`}>{post.title}</a>
+            </h2>
+            <p>{post.excerpt}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</Layout>
+
+<style>
+  .tag-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: var(--sm-space-4);
+  }
+
+  .tag-page__breadcrumb {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+    margin-bottom: var(--sm-space-3);
+  }
+
+  .tag-page__breadcrumb a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  h1 {
+    font-size: var(--sm-text-xl);
+    margin: 0 0 var(--sm-space-2);
+  }
+
+  .lead {
+    color: var(--sm-color-text-muted);
+    margin: 0 0 var(--sm-space-5);
+  }
+
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .post-list__item {
+    padding-top: var(--sm-space-4);
+    border-top: 1px solid var(--sm-color-border);
+    margin-bottom: var(--sm-space-4);
+  }
+
+  .post-list__item time {
+    font-size: var(--sm-text-sm);
+    color: var(--sm-color-text-muted);
+  }
+
+  .post-list__item h2 {
+    font-size: var(--sm-text-lg);
+    margin: var(--sm-space-1) 0 var(--sm-space-2);
+  }
+
+  .post-list__item h2 a {
+    text-decoration: none;
+  }
+
+  .post-list__item h2 a:hover {
+    color: var(--sm-color-accent);
+  }
+
+  .post-list__item p {
+    color: var(--sm-color-text-muted);
+    margin: 0;
+  }
+</style>
