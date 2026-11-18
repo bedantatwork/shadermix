@@ -5,6 +5,87 @@
 
 ---
 
+## 2026-11-18 — M1 runtime + first 3 effects
+
+**Status:** M1 build complete, pending Bedant's visual check (I can't render WebGL
+output myself — see "Needs visual confirmation" below).
+
+**Shipped:**
+- `packages/core/src/runtime/`: `gl.ts` (WebGL2→1 context, the exact attributes
+  from plan §5.2), `program.ts` (shader compile/link + shared fullscreen-quad
+  vertex shader `fullscreen.vert.glsl`), `scheduler.ts` (single shared rAF loop
+  for every effect on a page), `color.ts` (hex/rgb()/hsl() → sRGB-to-linear
+  vec3, per plan §5.2), `schema.ts` (the option-schema system from §5.1 —
+  types, `defaultsFromSchema`, `parseAttributes` for `sm-*` attributes,
+  `normalizeOptions` for the JS API).
+- `create-shader-effect.ts`: the generic engine every effect wraps — canvas-or-
+  container resolution, ResizeObserver + DPR cap at 2, IntersectionObserver
+  pause, `visibilitychange` pause, `prefers-reduced-motion` → single static
+  frame (overridable via `respectReducedMotion: false`), `webglcontextlost`/
+  `restored` handling with CSS-gradient fallback, mouse uniform, >8-context
+  dev warning, full `update/play/pause/destroy` lifecycle.
+- Three effects, each with an original fragment shader (header-commented per
+  plan §12), `meta.ts` schema, and a `createX()` factory that self-registers
+  via `registerEffect()`: **aurora** (3-colour flowing bands), **mesh-gradient**
+  (4-point inverse-distance colour mesh with domain-warp distortion + grain),
+  **grain-gradient** (angled 3-colour gradient + film grain).
+- Per-effect npm entry points (`@shadermix/core/aurora` etc.) plus
+  `@shadermix/core/effects` (all three, used by the Webflow bundle) — new tsup
+  entries, package.json `exports`, `.glsl` → raw-text loader for both tsup
+  (esbuild loader) and Vitest (custom plugin).
+- Vitest unit tests for `color.ts` (hex/rgb/hsl parsing, sRGB→linear) and
+  `schema.ts` (defaults, attribute parsing, enum fallback, options merging) —
+  14 tests, all passing. Needed `happy-dom` as a test-only dependency for DOM
+  APIs (`document.createElement`) in the schema tests.
+- `apps/playground-webflow/index.html` now has a section per effect with real
+  `sm-*` attributes.
+
+**Bugs found and fixed while building this (worth remembering):**
+1. `process.env.NODE_ENV` in `program.ts`'s error-logging branch — doesn't
+   exist in a browser with no bundler define; would have thrown at runtime on
+   any shader compile failure. Removed the guard, just always `console.warn`.
+2. Aurora's fragment shader has variable alpha (glow-based), but the GL
+   context uses `premultipliedAlpha: true` (plan §5.2) — had to premultiply
+   `color * alpha` before output or edges would composite wrong. The two
+   opaque effects (mesh-gradient, grain-gradient) always output alpha 1, so
+   they're unaffected, but this is worth checking on every future effect with
+   non-opaque output.
+3. **The big one:** `@shadermix/core`'s fine-grained `sideEffects` array
+   (listing `./dist/aurora.js`, `./dist/effects.js`, etc.) looked right but
+   was silently broken — tsup's code-splitting moves the actual
+   `registerEffect()` calls into shared chunk files with non-deterministic
+   hashed names (`chunk-XXXX.js`), which can never be listed in package.json
+   ahead of time. Downstream, `@shadermix/webflow`'s `import
+   "@shadermix/core/effects"` (a bare side-effect import) got tree-shaken
+   down to nothing — the built CDN bundle shipped with zero shader code, only
+   the empty registry. Caught by actually `cat`-ing the built bundle rather
+   than trusting the size number. Fixed by setting `"sideEffects": true`
+   (whole-package, no array) — correctness over marginal tree-shaking gains.
+   Re-verified: the Webflow bundle now contains all three effects at 4.34 KB
+   brotli (budget 25 KB); re-ran lint/typecheck/test/build/size clean after.
+4. Per-effect size-limit budgets: plan says "each effect ≤2KB gzip", but
+   `size-limit` measures each `@shadermix/core/<slug>` subpath import in
+   total isolation, which necessarily bundles the full shared runtime
+   (~2.9 KB) with whichever effect is measured — there's no way to express
+   "runtime amortized across effects" in a single-entry budget. Measured
+   real sizes are ~3.1–3.4 KB brotli per effect; bumped the per-effect budget
+   to 4 KB to match reality with headroom, documented here rather than
+   silently padding the number.
+
+**Needs visual confirmation (I can't render WebGL myself):** a static file
+server is running on port 4322 serving the repo root — open
+`http://localhost:4322/apps/playground-webflow/index.html` to see all three
+effects live. Please check they look reasonable, animate smoothly, and that
+resizing the window / switching tabs doesn't break anything.
+
+**Next steps:** once confirmed, M2 — remaining 7 effects (`silk`, `plasma`,
+`dot-grid`, `noise-waves`, `liquid-chrome`, `split-reveal`, `gradient-text`),
+`@shadermix/astro` components with View Transitions handling, finish out
+`@shadermix/webflow`, alpha-publish `0.1.0-alpha.x` to npm (blocked on the
+`@shadermix` npm org existing — still an open M0 "Me" task).
+
+---
+
 ## 2026-11-18 — M0 scaffold
 
 **Status:** M0 done. Monorepo builds, tests, lints, and the site runs locally.

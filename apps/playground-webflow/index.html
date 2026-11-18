@@ -10,28 +10,52 @@
         color: #f5f5f5;
         font-family: system-ui, sans-serif;
       }
-      .hero {
+      section {
         position: relative;
         min-height: 60vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-bottom: 1px solid #27272a;
       }
       .sm-content {
         position: relative;
         z-index: 1;
+        text-align: center;
+      }
+      .sm-content p {
+        opacity: 0.7;
       }
     </style>
   </head>
   <body>
     <!--
-      Mimics a Webflow "Footer code" install (plan §7.1) and a section with an
-      sm-effect attribute (plan §7.2). No effects exist yet (land in M1/M2) —
-      this page exists so the webflow bundle can be smoke-tested as it grows.
+      Mimics a Webflow "Footer code" install (plan §7.1) and sections using the
+      sm-effect attribute contract (plan §7.2). Smoke-tests the CDN bundle as
+      effects land — M1 ships aurora, mesh-gradient, grain-gradient.
     -->
-    <section class="hero" sm-effect="aurora">
+    <section sm-effect="aurora">
       <div class="sm-content">
-        <h1>Shadermix × Webflow playground</h1>
+        <h1>aurora</h1>
+        <p>sm-effect="aurora" (defaults)</p>
+      </div>
+    </section>
+
+    <section
+      sm-effect="mesh-gradient"
+      sm-colors="#5227FF, #00D1FF, #7CFF67, #FF2D95"
+      sm-distortion="0.6"
+    >
+      <div class="sm-content">
+        <h1>mesh-gradient</h1>
+        <p>sm-effect="mesh-gradient" sm-distortion="0.6"</p>
+      </div>
+    </section>
+
+    <section sm-effect="grain-gradient" sm-angle="120" sm-grain-amount="0.12">
+      <div class="sm-content">
+        <h1>grain-gradient</h1>
+        <p>sm-effect="grain-gradient" sm-angle="120" sm-grain-amount="0.12"</p>
       </div>
     </section>
 
