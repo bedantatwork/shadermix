@@ -1,18 +1,19 @@
-// Mock content layer — shaped exactly like a future `component` GROQ query
-// result (plan §8.3: component + resolved category reference). Swap
-// getComponents()/getComponentBySlug()/getCategories() for real @sanity/client
-// calls once the Sanity project exists; keep the same return shape so pages
-// using this module don't need to change.
+// Content layer for `component` (plan §8.3) — fetched from Sanity once per
+// build via module-level await, so the getters below stay synchronous and no
+// page code changed in the swap from mock data.
+//
+// The CMS owns editorial metadata (title, description, category, ordering);
+// the option schema comes from @shadermix/core's registry, which stays the
+// single source of truth for options (plan §5.1).
 import * as aurora from "@shadermix/core/aurora";
 import { effectRegistry } from "@shadermix/core/effects";
 import * as grainGradient from "@shadermix/core/grain-gradient";
 import * as meshGradient from "@shadermix/core/mesh-gradient";
+import { sanityFetch } from "./sanity";
 import { assertSlugLinks } from "./validate-content";
 
 // Loose structural type for an effect's option schema — avoids depending on
 // @shadermix/core's internal Schema type, which isn't part of its public API.
-// The schema is exported as a plain value from each effect module (plan
-// §5.1's single-source-of-truth); this just describes its shape for display.
 export interface SchemaFieldLike {
   type: string;
   default: unknown;
@@ -38,53 +39,42 @@ export interface ComponentDoc {
   schema: Record<string, SchemaFieldLike>;
 }
 
-const docs: ComponentDoc[] = [
-  {
-    slug: aurora.slug,
-    title: aurora.name,
-    categorySlug: "backgrounds",
-    categoryTitle: "Backgrounds",
-    type: "background",
-    shortDescription: "Soft flowing northern-lights bands.",
-    tags: ["gradient", "animated", "webgl"],
-    status: "new",
-    featured: true,
-    order: 1,
-    schema: aurora.schema,
-  },
-  {
-    slug: meshGradient.slug,
-    title: meshGradient.name,
-    categorySlug: "backgrounds",
-    categoryTitle: "Backgrounds",
-    type: "background",
-    shortDescription: "Slowly morphing multi-point colour mesh.",
-    tags: ["gradient", "animated", "webgl"],
-    status: "new",
-    featured: true,
-    order: 2,
-    schema: meshGradient.schema,
-  },
-  {
-    slug: grainGradient.slug,
-    title: grainGradient.name,
-    categorySlug: "backgrounds",
-    categoryTitle: "Backgrounds",
-    type: "background",
-    shortDescription: "Animated angled gradient with film grain.",
-    tags: ["gradient", "grain", "webgl"],
-    status: "new",
-    featured: false,
-    order: 3,
-    schema: grainGradient.schema,
-  },
-];
+type ComponentRow = Omit<ComponentDoc, "schema">;
+
+// Explicit namespace imports (not bare side-effect imports): core's package.json
+// only marks auto.js as side-effectful, so a bare import could be tree-shaken.
+const schemas = new Map<string, Record<string, SchemaFieldLike>>([
+  [aurora.slug, aurora.schema],
+  [meshGradient.slug, meshGradient.schema],
+  [grainGradient.slug, grainGradient.schema],
+]);
+
+const rows = await sanityFetch<ComponentRow[]>(`
+  *[_type == "component" && defined(slug.current)] | order(order asc) {
+    "slug": slug.current,
+    title,
+    "categorySlug": coalesce(category->slug.current, ""),
+    "categoryTitle": coalesce(category->title, ""),
+    type,
+    "shortDescription": coalesce(shortDescription, ""),
+    "tags": coalesce(tags, []),
+    "status": coalesce(status, "new"),
+    "featured": coalesce(featured, false),
+    "order": coalesce(order, 0)
+  }
+`);
 
 // Runs at module load — i.e. at build time, as soon as any page imports this.
+// Fails the build if a CMS doc points at an effect that doesn't exist.
 assertSlugLinks(
-  docs.map((doc) => doc.slug),
+  rows.map((row) => row.slug),
   [...effectRegistry.keys()],
 );
+
+const docs: ComponentDoc[] = rows.map((row) => ({
+  ...row,
+  schema: schemas.get(row.slug) ?? {},
+}));
 
 export function getComponents(): ComponentDoc[] {
   return [...docs].sort((a, b) => a.order - b.order);

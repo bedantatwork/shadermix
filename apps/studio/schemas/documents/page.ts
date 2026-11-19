@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { pageSectionTypes } from "../objects/sections.js";
+import { pageSectionTypes } from "../objects/sections";
 
 export default defineType({
   name: "page",

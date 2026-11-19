@@ -1,16 +1,17 @@
-import author from "./documents/author.js";
-import category from "./documents/category.js";
-import changelogEntry from "./documents/changelog-entry.js";
-import docPage from "./documents/doc-page.js";
-import page from "./documents/page.js";
-import post from "./documents/post.js";
-import siteSettings from "./documents/site-settings.js";
-import tag from "./documents/tag.js";
-import component from "./documents/component.js";
-import previewPreset from "./objects/preview-preset.js";
-import seo from "./objects/seo.js";
-import { pageSectionTypes } from "./objects/sections.js";
-import shadermixEmbed from "./objects/shadermix-embed.js";
+import author from "./documents/author";
+import category from "./documents/category";
+import changelogEntry from "./documents/changelog-entry";
+import docPage from "./documents/doc-page";
+import page from "./documents/page";
+import post from "./documents/post";
+import siteSettings from "./documents/site-settings";
+import tag from "./documents/tag";
+import component from "./documents/component";
+import codeBlock from "./objects/code-block";
+import previewPreset from "./objects/preview-preset";
+import seo from "./objects/seo";
+import { pageSectionTypes } from "./objects/sections";
+import shadermixEmbed from "./objects/shadermix-embed";
 
 export const schemaTypes = [
   // documents
@@ -27,5 +28,6 @@ export const schemaTypes = [
   seo,
   previewPreset,
   shadermixEmbed,
+  codeBlock,
   ...pageSectionTypes,
 ];
