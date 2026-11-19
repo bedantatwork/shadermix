@@ -44,6 +44,24 @@ deploy hook) will be needed once hosted, since content is fetched at build.
 
 **Next:** home page (needs design ref), then Cloudflare deploy.
 
+**Later the same session:**
+- **Studio had no content editor** — `sanity.config.ts` only loaded
+  `visionTool()`; in Sanity v3, configuring plugins means `structureTool()`
+  must be added explicitly. Added it with a grouped sidebar (`structure.ts`:
+  Components/Categories · Blog posts/Authors/Tags · Docs/Changelog/Pages ·
+  Site settings) and `siteSettings` as a true singleton (hidden from "Create
+  new", publish/discard/restore actions only). Bedant confirmed it works.
+- **5 sample blog posts** + `Tutorials`/`Performance` tags imported from
+  `apps/studio/seed/sample-posts.ndjson`. All IDs prefixed `post-sample-` —
+  **delete them before launch** (they will show on the live site otherwise).
+  All 22 docs pass `sanity documents validate`.
+- sanity.io/manage never lists documents — content is only visible in the
+  Studio (`pnpm --filter studio dev` → localhost:3333, log in with email).
+- Astro dev server reads Sanity once at startup (module-level await), so
+  Studio edits need a dev-server restart to show up locally.
+- Bedant is reviewing the existing pages at localhost:4321 to plan the home
+  page design. Gallery filter interaction still unconfirmed in a browser.
+
 ---
 
 ## 2026-11-18 — Sanity project created (setup in progress)
