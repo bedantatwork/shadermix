@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-11-19 — Sanity connected for real; site reads live content
+
+**Status:** Done. Dataset seeded, site builds all 16 routes from Sanity,
+lint/typecheck/test(20)/build green. Pushed to GitHub.
+
+**The "can't get in" problem was identity, not the org.** Same email, two
+Sanity accounts: "Bedant saikia" (email/password — owns the Shadermix org) and
+"Bedanta Saikia" (Google — auto-created on 18 Nov when "Continue with Google"
+was clicked during MCP OAuth; empty org). Both the MCP and the local CLI were
+on the Google one. Fix: `/mcp` → Sanity → clear auth → re-auth with
+email/password; CLI: `npx sanity logout` then
+`npx sanity login --provider sanity` (the `!` prompt can't drive the
+provider arrow-key menu). **Always log into Sanity with email/password, never
+Google.** The stray Google account can be deleted whenever.
+
+**Shipped:**
+- Last session's uncommitted Sanity swap, now committed: `lib/sanity.ts`
+  (dependency-free GROQ GET against the public dataset — no `@sanity/client`
+  needed), the four `lib/*-content.ts` modules querying Sanity with identical
+  return shapes, `codeBlock` object type, seed file.
+- `@shadermix/core` exports gained a `default` condition (+ changeset) so the
+  Sanity CLI's schema loader can resolve it.
+- Schema deployed via `npx sanity schema deploy` (local Studio = use CLI, not
+  the MCP `deploy_schema` tool).
+- 15 seed docs imported via `sanity dataset import` (published, not drafts).
+
+**Gotcha worth remembering:** document `_id`s containing a `.` (e.g.
+`category.backgrounds`) are **private paths** in Sanity — invisible to
+unauthenticated queries even on a public dataset. First import "succeeded" but
+the site saw 0 docs. Seed now uses hyphens (`category-backgrounds`). Never use
+dots in IDs for content the site reads.
+
+**Open:** Cloudflare Workers vs Pages (recommend Workers). Home page still
+blocked on a design reference. Studio not yet deployed to
+`shadermix.sanity.studio`. A rebuild trigger (Sanity webhook → Cloudflare
+deploy hook) will be needed once hosted, since content is fetched at build.
+
+**Next:** home page (needs design ref), then Cloudflare deploy.
+
+---
+
 ## 2026-11-18 — Sanity project created (setup in progress)
 
 **Status:** Sanity project exists; MCP connected but not yet authenticated.
