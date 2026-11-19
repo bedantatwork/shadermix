@@ -8,27 +8,33 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./auto": {
       "types": "./dist/auto.d.ts",
-      "import": "./dist/auto.js"
+      "import": "./dist/auto.js",
+      "default": "./dist/auto.js"
     },
     "./effects": {
       "types": "./dist/effects.d.ts",
-      "import": "./dist/effects.js"
+      "import": "./dist/effects.js",
+      "default": "./dist/effects.js"
     },
     "./aurora": {
       "types": "./dist/aurora.d.ts",
-      "import": "./dist/aurora.js"
+      "import": "./dist/aurora.js",
+      "default": "./dist/aurora.js"
     },
     "./mesh-gradient": {
       "types": "./dist/mesh-gradient.d.ts",
-      "import": "./dist/mesh-gradient.js"
+      "import": "./dist/mesh-gradient.js",
+      "default": "./dist/mesh-gradient.js"
     },
     "./grain-gradient": {
       "types": "./dist/grain-gradient.d.ts",
-      "import": "./dist/grain-gradient.js"
+      "import": "./dist/grain-gradient.js",
+      "default": "./dist/grain-gradient.js"
     }
   },
   "files": ["dist"],
